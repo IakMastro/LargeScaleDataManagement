@@ -1,0 +1,11 @@
+{
+  "namespace": "olympicGamesTokyo",
+  "type": "record",
+  "name": "olympicGamesTokyo",
+  "fields": [
+    {
+      "name": "tweet_message",
+      "type": "string"
+    }
+  ]
+}
