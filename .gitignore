@@ -5,3 +5,5 @@ target
 TwitterConfig.java
 .code
 olympic_games.*
+*.avro
+.vscode

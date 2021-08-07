@@ -1,0 +1,104 @@
+version: '3.9'
+
+services:
+    namenode:
+        image: bde2020/hadoop-namenode
+        container_name: namenode
+        domainname: namenode
+        ports:
+            - 9870:9870
+        volumes:
+            - hadoop_namenode:/hadoop/dfs/name
+        environment:
+            - CLUSTER_NAME=twitter-data
+        env_file:
+            - ./hadoop.env
+
+    datanode:
+        image: bde2020/hadoop-datanode
+        container_name: datanode
+        environment:
+            SERVICE_PRECONDITION: "namenode:9870"
+        env_file:
+            - ./hadoop.env
+
+    resourcemanager:
+        image: bde2020/hadoop-resourcemanager
+        container_name: resourcemanager
+        ports:
+            - 8088:8088
+        environment:
+            SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864"
+        env_file:
+            - ./hadoop.env
+
+    secondary_namenode:
+        image: bde2020/hadoop-namenode
+        container_name: secondary_namenode
+        environment:
+            SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864 resourcemanager:8088"
+        env_file:
+            - ./hadoop.env
+
+    historyserver:
+        image: bde2020/hadoop-historyserver
+        container_name: historyserver
+        environment:
+            SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864 resourcemanager:8088"
+        volumes:
+            - hadoop_historyserver:/hadoop/yarn/timeline
+        env_file:
+            - ./hadoop.env
+
+    zookeeper:
+        image: docker.io/bitnami/zookeeper:3.7
+        container_name: zookeeper
+        hostname: zookeeper
+        volumes:
+            - "zookeeper_data:/bitnami"
+        environment:
+            - ALLOW_ANONYMOUS_LOGIN=yes
+
+    kafka:
+        image: docker.io/bitnami/kafka:2
+        container_name: kafka
+        hostname: kafka
+        volumes:
+            - "kafka_data:/bitnami"
+        environment:
+            - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+            - ALLOW_PLAINTEXT_LISTENER=yes
+            - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+        depends_on:
+            - zookeeper
+
+    flume:
+        image: avastsoftware/flume-hdfs
+        container_name: flume
+        hostname: flume
+        volumes:
+            - ./my_data/:/conf/
+        environment:
+            - FLUME_AGENT_NAME=KafkaAgent
+            - FLUME_CONF_DIR=conf/
+            - FLUME_CONF_FILE=conf/twitter.conf
+        depends_on:
+            - kafka
+            - namenode
+
+    java:
+        build: .
+        container_name: java
+        depends_on: 
+            - flume
+        volumes:
+            - my_files:/my_files
+
+volumes:
+    hadoop_namenode:
+    hadoop_datanode:
+    hadoop_historyserver:
+    zookeeper_data:
+    kafka_data:
+    my_data:
+    my_files:

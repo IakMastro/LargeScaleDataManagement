@@ -1,0 +1,35 @@
+{
+  "namespace": "olympicGamesTokyo",
+  "type": "record",
+  "name": "olympicGamesTokyo",
+  "fields": [
+    {
+      "name": "id",
+      "type": "string"
+    },
+    {
+      "name": "name",
+      "type": "string"
+    },
+    {
+      "name": "location",
+      "type": "string"
+    },
+    {
+      "name": "verified",
+      "type": "boolean"
+    },
+    {
+      "name": "text",
+      "type": "string"
+    },
+    {
+      "name": "lang",
+      "type": "string"
+    },
+    {
+      "name": "filter",
+      "type": "string"
+    }
+  ]
+}

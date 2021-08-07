@@ -1,6 +1,8 @@
 package kafka;
 
 import com.google.common.collect.Lists;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.twitter.bijection.avro.GenericAvroCodecs;
 import com.twitter.hbc.ClientBuilder;
 import com.twitter.hbc.core.Client;
@@ -31,12 +33,13 @@ public class TwitterProducer {
     private Client client;
     private KafkaProducer<String, byte[]> producer;
     private final BlockingQueue<String> blockingQueue = new LinkedBlockingQueue<>(1000);
-    private final List<String> terms = Lists.newArrayList("olympic", "games", "tokyo", "2020");
+    private final List<String> terms = Lists.newArrayList("covid2019", "coronavirus", "vaccinate");
+    private final Gson gson = new Gson();
 
     public static void main(String[] args) {
         try {
             new TwitterProducer().run();
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
     }
@@ -88,7 +91,7 @@ public class TwitterProducer {
         return new KafkaProducer<>(properties);
     }
 
-    private void run() throws IOException {
+    private void run() throws IOException, InterruptedException {
         logger.info("Setting up");
 
         client = createClient(blockingQueue);
@@ -104,7 +107,7 @@ public class TwitterProducer {
             logger.info("Finished closing");
         }));
 
-        var schema = new Schema.Parser().parse(new File("schema/olympic_games_tokyo.avsc"));
+        var schema = new Schema.Parser().parse(new File("schema/twitter.avsc"));
 
         var recordInjection = GenericAvroCodecs.toBinary(schema);
         for (int i = 0; i < 100; i++) {
@@ -118,13 +121,30 @@ public class TwitterProducer {
             }
 
             if (message != null) {
-                var recordMetadata = new GenericData.Record(schema);
-                recordMetadata.put("tweet_message", message);
+                var avroRecord = new GenericData.Record(schema);
+                var tweet = gson.fromJson(blockingQueue.take(), JsonElement.class).getAsJsonObject();
+                var extended_tweet = tweet.get("extended_tweet");
+                var user = tweet.get("user").getAsJsonObject();
 
-                var bytes = recordInjection.apply(recordMetadata);
-                var record = new ProducerRecord<String, byte[]>(KafkaConfig.TOPIC, bytes);
+                avroRecord.put("id", String.valueOf(tweet.get("id_str")));
+                avroRecord.put("name", String.valueOf(user.get("name")));
+                avroRecord.put("location", String.valueOf(user.get("location")));
+                avroRecord.put("verified", user.get("verified").getAsBoolean());
+
+                if (extended_tweet != null) {
+                    avroRecord.put("text", String.valueOf(extended_tweet.getAsJsonObject().get("full_text")));
+                } else {
+                    avroRecord.put("text", String.valueOf(tweet.get("text")));
+                }
+
+                avroRecord.put("lang", String.valueOf(tweet.get("lang")));
+                avroRecord.put("filter", String.valueOf(tweet.get("filter_level")));
+
+                var bytes = recordInjection.apply(avroRecord);
+                var record = new ProducerRecord<String, byte[]>("Twitter-Data", bytes);
+                logger.info(String.valueOf(record));
                 producer.send(record);
-                logger.info(record.toString());
+                producer.flush();
             }
         }
 

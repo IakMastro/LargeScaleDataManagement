@@ -1,9 +1,8 @@
 package kafka;
 
-// Kafka configuration file
 public class KafkaConfig {
-    public static final String BOOTSTRAPSERVERS = "localhost:9092";
-    public static final String TOPIC = "Olympic-Games-Tokyo";
+    public static final String BOOTSTRAPSERVERS = "kafka:9092";
+    public static final String TOPIC = "TwitterData";
     public static final String ACKS_CONFIG = "all";
     public static final String MAX_IN_FLIGHT_CONN = "5";
 
