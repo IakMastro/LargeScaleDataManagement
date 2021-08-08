@@ -7,3 +7,4 @@ TwitterConfig.java
 olympic_games.*
 *.avro
 .vscode
+*.pdf

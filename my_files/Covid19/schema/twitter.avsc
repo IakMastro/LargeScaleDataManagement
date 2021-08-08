@@ -1,7 +1,7 @@
 {
-  "namespace": "olympicGamesTokyo",
+  "namespace": "covid19",
   "type": "record",
-  "name": "olympicGamesTokyo",
+  "name": "covid19",
   "fields": [
     {
       "name": "id",

@@ -49,7 +49,7 @@ public class TwitterProducer {
         var hosts = new HttpHosts(Constants.STREAM_HOST); // Twitter hosts
         var endpoint = new StatusesFilterEndpoint();
 
-        endpoint.trackTerms(terms); // Find the terms olympic, games, tokyo and 2020
+        endpoint.trackTerms(terms); // Find the terms covid2019, coronavirus and vaccinate
 
         // Create the authorization using the keys provided by Twitter.
         // TwitterConfig is a hidden file.
