@@ -728,8 +728,8 @@ KafkaAgent.channels.channel1.transactionCapacity = 1000
 --
 KafkaAgent.sinks.sink1.type = hdfs # Τύπος: hdfs
 KafkaAgent.sinks.sink1.hdfs.path = hdfs://namenode:9000/%{topic}/%y-%m-%d # Το {topic} επιστρέφει το όνομα του topic
-KafkaAgent.sinks.sink1.hdfs.rollInterval = 0
-KafkaAgent.sinks.sink1.hdfs.rollSize = 0
+KafkaAgent.sinks.sink1.hdfs.rollInterval = 100
+KafkaAgent.sinks.sink1.hdfs.rollSize = 10000
 KafkaAgent.sinks.sink1.hdfs.rollCount = 0
 KafkaAgent.sinks.sink1.hdfs.fileType = DataStream
 KafkaAgent.sinks.sink1.channel = channel1
@@ -761,13 +761,13 @@ KafkaAgent.channels.channel1.transactionCapacity = 1000
 
 KafkaAgent.sinks.sink1.type = hdfs
 KafkaAgent.sinks.sink1.hdfs.path = hdfs://namenode:9000/%{topic}/%y-%m-%d
-KafkaAgent.sinks.sink1.hdfs.rollInterval = 0
-KafkaAgent.sinks.sink1.hdfs.rollSize = 0
+KafkaAgent.sinks.sink1.hdfs.rollInterval = 100
+KafkaAgent.sinks.sink1.hdfs.rollSize = 10000
 KafkaAgent.sinks.sink1.hdfs.rollCount = 0
 KafkaAgent.sinks.sink1.hdfs.fileType = DataStream
 KafkaAgent.sinks.sink1.channel = channel1
 
-KafkaAgent.sinks.sink1.hdfs.filePrefix = olympic_games
+KafkaAgent.sinks.sink1.hdfs.filePrefix = covid19
 KafkaAgent.sinks.sink1.hdfs.fileSuffix = .avro
 KafkaAgent.sinks.sink1.serializer = avro_event
 KafkaAgent.sinks.sink1.serializer.compressionCodec = snappy

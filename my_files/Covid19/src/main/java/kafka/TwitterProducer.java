@@ -12,7 +12,13 @@ import com.twitter.hbc.core.endpoint.StatusesFilterEndpoint;
 import com.twitter.hbc.core.processor.StringDelimitedProcessor;
 import com.twitter.hbc.httpclient.auth.OAuth1;
 import org.apache.avro.Schema;
+import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.generic.GenericRecord;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.kafka.clients.producer.*;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -21,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
@@ -38,7 +45,7 @@ public class TwitterProducer {
 
     public static void main(String[] args) {
         try {
-            new TwitterProducer().run();
+            new TwitterProducer().run(args[0]);
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
@@ -91,7 +98,7 @@ public class TwitterProducer {
         return new KafkaProducer<>(properties);
     }
 
-    private void run() throws IOException, InterruptedException {
+    private void run(String fileName) throws IOException, InterruptedException {
         logger.info("Setting up");
 
         client = createClient(blockingQueue);
@@ -109,45 +116,42 @@ public class TwitterProducer {
 
         var schema = new Schema.Parser().parse(new File("schema/twitter.avsc"));
 
+        var writer = new DataFileWriter<GenericRecord>(new GenericDatumWriter<GenericRecord>(schema));
         var recordInjection = GenericAvroCodecs.toBinary(schema);
+        var configuration = new Configuration();
+        var fileSystem = FileSystem.get(URI.create("hdfs://namenode:9000/".concat(fileName)), configuration);
+        var output = fileSystem.create(new Path("hdfs://namenode:9000/".concat(fileName)));
+        writer.create(schema, output);
         for (int i = 0; i < 100; i++) {
-            String message = null;
+            String message =  blockingQueue.poll(5, TimeUnit.SECONDS);
 
-            try {
-                message = blockingQueue.poll(5, TimeUnit.SECONDS);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-                client.stop();
+            var avroRecord = new GenericData.Record(schema);
+            var tweet = gson.fromJson(message, JsonElement.class).getAsJsonObject();
+            var extended_tweet = tweet.get("extended_tweet");
+            var user = tweet.get("user").getAsJsonObject();
+
+            avroRecord.put("name", String.valueOf(user.get("name")));
+            avroRecord.put("location", String.valueOf(user.get("location")));
+            avroRecord.put("verified", user.get("verified").getAsBoolean());
+
+            if (extended_tweet != null) {
+                avroRecord.put("text", String.valueOf(extended_tweet.getAsJsonObject().get("full_text")));
+            } else {
+                avroRecord.put("text", String.valueOf(tweet.get("text")));
             }
 
-            if (message != null) {
-                var avroRecord = new GenericData.Record(schema);
-                var tweet = gson.fromJson(blockingQueue.take(), JsonElement.class).getAsJsonObject();
-                var extended_tweet = tweet.get("extended_tweet");
-                var user = tweet.get("user").getAsJsonObject();
+            avroRecord.put("lang", String.valueOf(tweet.get("lang")));
+            avroRecord.put("filter", String.valueOf(tweet.get("filter_level")));
 
-                avroRecord.put("id", String.valueOf(tweet.get("id_str")));
-                avroRecord.put("name", String.valueOf(user.get("name")));
-                avroRecord.put("location", String.valueOf(user.get("location")));
-                avroRecord.put("verified", user.get("verified").getAsBoolean());
-
-                if (extended_tweet != null) {
-                    avroRecord.put("text", String.valueOf(extended_tweet.getAsJsonObject().get("full_text")));
-                } else {
-                    avroRecord.put("text", String.valueOf(tweet.get("text")));
-                }
-
-                avroRecord.put("lang", String.valueOf(tweet.get("lang")));
-                avroRecord.put("filter", String.valueOf(tweet.get("filter_level")));
-
-                var bytes = recordInjection.apply(avroRecord);
-                var record = new ProducerRecord<String, byte[]>("Twitter-Data", bytes);
-                logger.info(String.valueOf(record));
-                producer.send(record);
-                producer.flush();
-            }
+            var bytes = recordInjection.apply(avroRecord);
+            var record = new ProducerRecord<String, byte[]>(KafkaConfig.TOPIC, String.valueOf(tweet.get("id_str")), bytes);
+            logger.info(String.valueOf(record));
+            producer.send(record);
+            producer.flush();
+            writer.append(avroRecord);
         }
+        writer.close();
 
-        logger.info("\nApplication end");
+        logger.info("Application end");
     }
 }

@@ -2,7 +2,7 @@ package kafka;
 
 public class KafkaConfig {
     public static final String BOOTSTRAPSERVERS = "kafka:9092";
-    public static final String TOPIC = "TwitterData";
+    public static final String TOPIC = "Twitter-Data";
     public static final String ACKS_CONFIG = "all";
     public static final String MAX_IN_FLIGHT_CONN = "5";
 

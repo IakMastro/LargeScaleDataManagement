@@ -2,46 +2,47 @@ version: '3.9'
 
 services:
     namenode:
-        image: bde2020/hadoop-namenode
+        image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
         container_name: namenode
-        domainname: namenode
+        hostname: namenode
         ports:
             - 9870:9870
         volumes:
             - hadoop_namenode:/hadoop/dfs/name
         environment:
-            - CLUSTER_NAME=twitter-data
+            - CLUSTER_NAME=test
         env_file:
             - ./hadoop.env
 
     datanode:
-        image: bde2020/hadoop-datanode
+        image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
         container_name: datanode
+        volumes:
+        - hadoop_datanode:/hadoop/dfs/data
         environment:
             SERVICE_PRECONDITION: "namenode:9870"
         env_file:
-            - ./hadoop.env
+        - ./hadoop.env
 
     resourcemanager:
-        image: bde2020/hadoop-resourcemanager
+        image: bde2020/hadoop-resourcemanager:2.0.0-hadoop3.2.1-java8
         container_name: resourcemanager
-        ports:
-            - 8088:8088
+        hostname: resourcemanager
         environment:
             SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864"
         env_file:
-            - ./hadoop.env
+        - ./hadoop.env
 
-    secondary_namenode:
-        image: bde2020/hadoop-namenode
-        container_name: secondary_namenode
+    nodemanager:
+        image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8
+        container_name: nodemanager
         environment:
             SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864 resourcemanager:8088"
         env_file:
             - ./hadoop.env
 
     historyserver:
-        image: bde2020/hadoop-historyserver
+        image: bde2020/hadoop-historyserver:2.0.0-hadoop3.2.1-java8
         container_name: historyserver
         environment:
             SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864 resourcemanager:8088"
@@ -73,7 +74,7 @@ services:
             - zookeeper
 
     flume:
-        image: avastsoftware/flume-hdfs
+        image: lokkju/flume-hdfs
         container_name: flume
         hostname: flume
         volumes:
@@ -90,9 +91,9 @@ services:
         build: .
         container_name: java
         depends_on: 
-            - flume
+            - namenode
         volumes:
-            - my_files:/my_files
+            - ./my_files:/my_files
 
 volumes:
     hadoop_namenode:
