@@ -6,3 +6,12 @@ deserializer:
 
 lang:
 	docker exec -it java mvn exec:java -Dexec.mainClass=mapreduce.lang_count.LangCountRunner
+
+verified:
+	docker exec -it java mvn exec:java -Dexec.mainClass=mapreduce.verified.VerifiedRunner
+
+filter:
+	docker exec -it java mvn exec:java -Dexec.mainClass=mapreduce.filter.FilterRunner
+
+location:
+	docker exec -it java mvn exec:java -Dexec.mainClass=mapreduce.location.LocationRunner

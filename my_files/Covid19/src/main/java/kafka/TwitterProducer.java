@@ -119,8 +119,8 @@ public class TwitterProducer {
         var writer = new DataFileWriter<GenericRecord>(new GenericDatumWriter<GenericRecord>(schema));
         var recordInjection = GenericAvroCodecs.toBinary(schema);
         var configuration = new Configuration();
-        var fileSystem = FileSystem.get(URI.create("hdfs://namenode:9000/".concat(fileName)), configuration);
-        var output = fileSystem.create(new Path("hdfs://namenode:9000/".concat(fileName)));
+        var fileSystem = FileSystem.get(URI.create("hdfs://namenode:9000/Input/".concat(fileName)), configuration);
+        var output = fileSystem.create(new Path("hdfs://namenode:9000/Input/".concat(fileName)));
         writer.create(schema, output);
         for (int i = 0; i < 100; i++) {
             String message =  blockingQueue.poll(5, TimeUnit.SECONDS);

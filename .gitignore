@@ -8,3 +8,4 @@ olympic_games.*
 *.avro
 .vscode
 *.pdf
+myfiles/twitter.conf

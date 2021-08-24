@@ -2,7 +2,7 @@ version: '3.9'
 
 services:
     namenode:
-        image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+        image: bde2020/hadoop-namenode
         container_name: namenode
         hostname: namenode
         ports:
@@ -13,36 +13,47 @@ services:
             - CLUSTER_NAME=test
         env_file:
             - ./hadoop.env
+        networks:
+            - hadoop_ecosystem
 
     datanode:
-        image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+        image: bde2020/hadoop-datanode
         container_name: datanode
+        hostname: localhost
+        ports:
+            - 9864:9864
         volumes:
-        - hadoop_datanode:/hadoop/dfs/data
+            - hadoop_datanode:/hadoop/dfs/data
         environment:
             SERVICE_PRECONDITION: "namenode:9870"
         env_file:
-        - ./hadoop.env
+            - ./hadoop.env
+        networks:
+            - hadoop_ecosystem
 
     resourcemanager:
-        image: bde2020/hadoop-resourcemanager:2.0.0-hadoop3.2.1-java8
+        image: bde2020/hadoop-resourcemanager
         container_name: resourcemanager
         hostname: resourcemanager
         environment:
             SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864"
         env_file:
         - ./hadoop.env
+        networks:
+            - hadoop_ecosystem
 
     nodemanager:
-        image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8
+        image: bde2020/hadoop-nodemanager
         container_name: nodemanager
         environment:
             SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864 resourcemanager:8088"
         env_file:
             - ./hadoop.env
+        networks:
+            - hadoop_ecosystem
 
     historyserver:
-        image: bde2020/hadoop-historyserver:2.0.0-hadoop3.2.1-java8
+        image: bde2020/hadoop-historyserver
         container_name: historyserver
         environment:
             SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864 resourcemanager:8088"
@@ -50,6 +61,8 @@ services:
             - hadoop_historyserver:/hadoop/yarn/timeline
         env_file:
             - ./hadoop.env
+        networks:
+            - hadoop_ecosystem
 
     zookeeper:
         image: docker.io/bitnami/zookeeper:3.7
@@ -59,6 +72,8 @@ services:
             - "zookeeper_data:/bitnami"
         environment:
             - ALLOW_ANONYMOUS_LOGIN=yes
+        networks:
+            - hadoop_ecosystem
 
     kafka:
         image: docker.io/bitnami/kafka:2
@@ -72,6 +87,8 @@ services:
             - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
         depends_on:
             - zookeeper
+        networks:
+            - hadoop_ecosystem
 
     flume:
         image: lokkju/flume-hdfs
@@ -86,14 +103,20 @@ services:
         depends_on:
             - kafka
             - namenode
+        networks:
+            - hadoop_ecosystem
 
     java:
         build: .
         container_name: java
         depends_on: 
             - namenode
+        env_file:
+            - ./hadoop.env
         volumes:
             - ./my_files:/my_files
+        networks:
+            - hadoop_ecosystem
 
 volumes:
     hadoop_namenode:
@@ -103,3 +126,7 @@ volumes:
     kafka_data:
     my_data:
     my_files:
+
+networks:
+    hadoop_ecosystem:
+        name: hadoop_ecosystem

@@ -1,4 +1,4 @@
-package mapreduce.lang_count;
+package mapreduce.location;
 
 import org.apache.avro.mapred.AvroInputFormat;
 import org.apache.hadoop.fs.Path;
@@ -8,22 +8,22 @@ import org.apache.hadoop.mapred.*;
 
 import java.io.IOException;
 
-public class LangCountRunner {
+public class LocationRunner {
     public static void main(String[] args) {
-        var conf = new JobConf(LangCountRunner.class);
-        conf.setJobName("LangCount");
+        var conf = new JobConf(LocationRunner.class);
+        conf.setJobName("LocationRunner");
 
         conf.setOutputKeyClass(Text.class);
         conf.setOutputValueClass(IntWritable.class);
 
-        conf.setMapperClass(LangCountMapper.class);
-        conf.setReducerClass(LangCountReducer.class);
+        conf.setMapperClass(LocationMapper.class);
+        conf.setReducerClass(LocationReducer.class);
 
         conf.setInputFormat(AvroInputFormat.class);
         conf.setOutputFormat(TextOutputFormat.class);
 
         FileInputFormat.setInputPaths(conf, new Path("hdfs://namenode:9000/Input/"));
-        FileOutputFormat.setOutputPath(conf, new Path("hdfs://namenode:9000/LangCountResults"));
+        FileOutputFormat.setOutputPath(conf, new Path("hdfs://namenode:9000/LocationResults"));
 
         try {
             JobClient.runJob(conf);
