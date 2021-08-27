@@ -19,9 +19,6 @@ services:
     datanode:
         image: bde2020/hadoop-datanode
         container_name: datanode
-        hostname: localhost
-        ports:
-            - 9864:9864
         volumes:
             - hadoop_datanode:/hadoop/dfs/data
         environment:

@@ -9,3 +9,4 @@ olympic_games.*
 .vscode
 *.pdf
 myfiles/twitter.conf
+node_modules

@@ -11,7 +11,6 @@ import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
 
 import java.io.IOException;
-import java.util.HashMap;
 
 public class FilterMapper extends MapReduceBase implements
         Mapper<AvroWrapper<GenericRecord>, NullWritable, Text, IntWritable> {
