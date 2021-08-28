@@ -35,7 +35,7 @@ services:
         environment:
             SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864"
         env_file:
-        - ./hadoop.env
+            - ./hadoop.env
         networks:
             - hadoop_ecosystem
 

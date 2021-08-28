@@ -34,7 +34,7 @@ image::img/protest.jpg[Διαδήλωση στην Αμερική, 400, 400]
 .Ιστοσελίδες **Κοινωνικών Ιστοσελίδων** (**Social Media**)
 image::img/social_media.jpg[Ιστοσελίδες Social Media]
 
-Ανεξαρτήτως των γνώμων, αρκετοί βρήκαν την φωνή τους μέσω των social media. Ένα εργαλείο που κάποτε χρησιμοποίουταν παραπάνω για καθημερινή χρήση, χρησιμοποιήθηκε για νέους λόγους για πολλούς. Αρκετά γκρουπ κανονίζανε πορείες και διαμαρτυρίες μέσω τέτοιων ιστοσελίδων.
+Ανεξαρτήτως των γνώμων, αρκετοί βρήκαν την φωνή τους μέσω των social media. Ένα εργαλείο που κάποτε χρησιμοποίουταν παραπάνω για καθημερινή χρήση, χρησιμοποιήθηκε για νέους λόγους από πολλούς. Αρκετά γκρουπ κανονίζανε πορείες και διαμαρτυρίες μέσω τέτοιων ιστοσελίδων.
 
 .Το Twitter είναι μία από τις ιστοσελίδες που διαμοιράζονται οι γνώμες για τον COVID-19
 image::img/twitter.png[Το logo του Twitter]
@@ -246,7 +246,7 @@ image::img/flafka.jpg[Kafka Producer - Flume Consumer - HDFS]
 .To Apache Kafka χρησιμοποίειται από το 80% των οικονομικών εταιρείων.
 image::img/kafka.png[Kafka Logo]
 
-Τo **Apache Kafka** είναι ένα κατανεμημένο event streaming πλατφόρμα η οποία χρησιμοποίειται από χιλιάδες εταιρείες για τις πολύ καλές επιδόσεις σε data pipelines, streaming analysis, data integration και mission-critical εφαρμογές.
+Τo **Apache Kafka** είναι μία κατανεμημένη event streaming πλατφόρμα η οποία χρησιμοποίειται από χιλιάδες εταιρείες για τις πολύ καλές επιδόσεις σε data pipelines, streaming analysis, data integration και mission-critical εφαρμογές.
 
 .Οι δυνατότητες του kafka
 * **Κύριες δυνατότητες**
@@ -270,7 +270,7 @@ image::img/kafka.png[Kafka Logo]
 .Το δεύτερο συνθετικό του Flafka, το Flume
 image::img/flume.png[Flume Logo]
 
-Το **Apache Flafka** είναι μία κατανεμημενή, αξιοπίστη υπηρεσία καλό για την συλλογή και μεταφορά μεγάλου συνόλου από logs. Έχει μία απλή και επεκτάσιμη αρχιτεκτονική η οποία βασίζεται στο streaming δεδομένων.
+Το **Apache Flume** είναι μία κατανεμημενή, αξιοπίστη υπηρεσία καλό για την συλλογή και μεταφορά μεγάλου συνόλου από logs. Έχει μία απλή και επεκτάσιμη αρχιτεκτονική η οποία βασίζεται στο streaming δεδομένων.
 
 === Fluentd
 
@@ -469,7 +469,7 @@ To Hadoop χωρίζεται σε πέντε διαφορετικά μηχανα
 * **Namenode**
 * **Datanode**
 * **Resourcemanager**
-* **Secondary Namenode**
+* **Nodemanager**
 * **History Server**
 
 .Το Hadoop στο docker-compose.yml
@@ -479,23 +479,29 @@ services:
     namenode: # Όνομα service namenode
         image: bde2020/hadoop-namenode # Το image το οποίο έχει το hadoop-namenode
         container_name: namenode # Το όνομα του container που θα εμφανίζεται στο docker ps
-        domainname: namenode # Το domain name του container για να μπορεί να συνδέονται μεταξύ τους
+        hostname: namenode # Το domain name του container για να μπορεί να συνδέονται μεταξύ τους
         ports:
             - 9870:9870 # Port forward στο 9870. Αυτό σημαίνει ότι το localhost:9870 επιστρέφει το namenode
         volumes:
             - hadoop_namenode:/hadoop/dfs/name # Εδώ αποθηκεύει αυτόματα τα δεδομένα από το hadoop
         environment:
-            - CLUSTER_NAME=twitter-data # Εδώ είναι το ονόμα του cluster
+            - CLUSTER_NAME=test # Εδώ είναι το ονόμα του cluster
         env_file:
             - ./hadoop.env # Εδώ είναι τα environment variables που περνάει μέσα
+        networks:
+            - hadoop_ecosystem # Εδώ είναι το network που βρίσκετε μέσα το container
 
     datanode:
         image: bde2020/hadoop-datanode
         container_name: datanode
+        volumes:
+            - hadoop_datanode:/hadoop/dfs/data
         environment:
-            SERVICE_PRECONDITION: "namenode:9870" # Περιμένει να ανοίξει το namenode
+            SERVICE_PRECONDITION: "namenode:9870"
         env_file:
             - ./hadoop.env
+        networks:
+            - hadoop_ecosystem
 
     resourcemanager:
         image: bde2020/hadoop-resourcemanager
@@ -506,14 +512,18 @@ services:
             SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864"
         env_file:
             - ./hadoop.env
+        networks:
+            - hadoop_ecosystem
 
-    secondary_namenode:
-        image: bde2020/hadoop-namenode
-        container_name: secondary_namenode
+    nodemanager:
+        image: bde2020/hadoop-nodemanager
+        container_name: nodemanager
         environment:
             SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864 resourcemanager:8088"
         env_file:
             - ./hadoop.env
+        networks:
+            - hadoop_ecosystem
 
     historyserver:
         image: bde2020/hadoop-historyserver
@@ -544,6 +554,8 @@ services:
             - "zookeeper_data:/bitnami"
         environment:
             - ALLOW_ANONYMOUS_LOGIN=yes
+        networks:
+            - hadoop_ecosystem
 
     kafka:
         image: docker.io/bitnami/kafka:2
@@ -557,6 +569,8 @@ services:
             - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true # Δεν χρείαζεται να δημιουργηθει με το χέρι το topic, το κάνει αυτόματα 
         depends_on:
             - zookeeper # Περιμένει να ανοιξεί το zookeeper πρώτα για να αρχίσει
+        networks:
+            - hadoop_ecosystem
 --
 
 Παραπάνω πληροφορίες για το image https://hub.docker.com/r/bitnami/kafka/dockerfile[εδώ].
@@ -574,7 +588,7 @@ docker exec -it kafka kafka-topics.sh --create --topic Twitter-Data --bootstrap-
 --
 ...
     flume:
-        image: avastsoftware/flume-hdfs
+        image: lokkju/flume-hdfs
         container_name: flume
         hostname: flume
         volumes:
@@ -586,11 +600,11 @@ docker exec -it kafka kafka-topics.sh --create --topic Twitter-Data --bootstrap-
         depends_on:
             - kafka
             - namenode
+        networks:
+            - hadoop_ecosystem
 --
 
-Παραπάνω πληροφορίες για το image https://hub.docker.com/r/avastsoftware/flume-hdfs[εδώ].
-
-NOTE: Η εκδόση που έρχεται το image μαζί είναι η 1.6.0. Η τρέχουσα τελευταία εκδόση είναι η 1.9.0, όπου υπάρχουν μερικές διαφορές στον κώδικα. 
+Παραπάνω πληροφορίες για το image https://hub.docker.com/r/lokkju/flume-hdfs[εδώ].
 
 ==== Maven
 
@@ -605,7 +619,8 @@ WORKDIR /my_files/Covid19/ # Ο κατάλογος που γίνεται
 
 RUN mvn install # Εγκατάσταση των βιβλιοθήκων
 
-CMD ["tail", "-f", "/dev/null"] # Με αυτή την εντολή τρέχει για πάντα
+EXPOSE 8080 # Η διεύθυνση του Rest API
+CMD ["./start_server.sh"] # Με αυτή την εντολή τρέχει για πάντα
 --
 
 .Το Maven στο docker-compose.yml
@@ -613,12 +628,16 @@ CMD ["tail", "-f", "/dev/null"] # Με αυτή την εντολή τρέχει
 --
 ...
     java:
-        build: . # Χτίζει το dockerfile που βρίσκεται στο root της εφαρμογής
+        build: .
         container_name: java
         depends_on: 
-            - flume
+            - namenode
+        ports:
+            - 8080:8080
         volumes:
-            - my_files:/my_files
+            - ./my_files:/my_files
+        networks:
+            - hadoop_ecosystem
 
 volumes: # Τα volumes που χρησιμοποίει όλο το docker swarm
     hadoop_namenode:
@@ -628,6 +647,10 @@ volumes: # Τα volumes που χρησιμοποίει όλο το docker swarm
     kafka_data:
     my_data:
     my_files:
+
+networks: # Τα networks του συστήματος
+    hadoop_ecosystem:
+        name: hadoop_ecosystem
 --
 
 === Εκτέλεση εφαρμογής
@@ -640,6 +663,8 @@ docker stack deploy # Για swarm mode
 
 docker exec -it namenode hadoop dfsadmin -safemode leave
 --
+
+NOTE: Υπάρχει scriptακη που κάνει deploy το cluster σε single note ονόματι ``run.sh``
 
 Για την πρόσβαση στο namenode, βρίσκεται στην διεύθυνση localhost:9870.
 
@@ -704,8 +729,8 @@ KafkaAgent.sinks = sink1
 [source,conf]
 --
 KafkaAgent.sources.source1.type = org.apache.flume.source.kafka.KafkaSource # Οι βιβλιοθήκες
-KafkaAgent.sources.source1.zookeeperConnect = zookeeper:2181 # Η διεύθυνση του zookeeper
-KafkaAgent.sources.source1.topic = Twitter-Data # Το όνομα του topic
+KafkaAgent.sources.source1.kafka.bootstrap.servers = kafka:9092 # Η διεύθυνση του bootstrap
+KafkaAgent.sources.source1.kafka.topics = Twitter-Data # Το όνομα του topic
 KafkaAgent.sources.source1.groupId = flume # Το ID του group
 KafkaAgent.sources.source1.channels = channel1 # Ποιο channel χρησιμοποίει
 KafkaAgent.sources.source1.kafka.consumer.timeout.ms = 100 # Πόση ώρα παίρνει για να κάνει timeout
@@ -727,7 +752,7 @@ KafkaAgent.channels.channel1.transactionCapacity = 1000
 [source,conf]
 --
 KafkaAgent.sinks.sink1.type = hdfs # Τύπος: hdfs
-KafkaAgent.sinks.sink1.hdfs.path = hdfs://namenode:9000/%{topic}/%y-%m-%d # Το {topic} επιστρέφει το όνομα του topic
+KafkaAgent.sinks.sink1.hdfs.path = hdfs://namenode:9000/%{topic} # Το {topic} επιστρέφει το όνομα του topic
 KafkaAgent.sinks.sink1.hdfs.rollInterval = 100
 KafkaAgent.sinks.sink1.hdfs.rollSize = 10000
 KafkaAgent.sinks.sink1.hdfs.rollCount = 0
@@ -738,7 +763,6 @@ KafkaAgent.sinks.sink1.channel = channel1
 KafkaAgent.sinks.sink1.hdfs.filePrefix = covid_19
 KafkaAgent.sinks.sink1.hdfs.fileSuffix = .avro
 KafkaAgent.sinks.sink1.serializer = avro_event
-KafkaAgent.sinks.sink1.serializer.compressionCodec = snappy
 --
 
 .Το ολοκληρωμένο configuration του Flume είναι το εξής
@@ -749,8 +773,8 @@ KafkaAgent.channels = channel1
 KafkaAgent.sinks = sink1
 
 KafkaAgent.sources.source1.type = org.apache.flume.source.kafka.KafkaSource
-KafkaAgent.sources.source1.zookeeperConnect = zookeeper:2181
-KafkaAgent.sources.source1.topic = Twitter-Data
+KafkaAgent.sources.source1.kafka.bootstrap.servers = kafka:9092
+KafkaAgent.sources.source1.kafka.topics = Twitter-Data
 KafkaAgent.sources.source1.groupId = flume
 KafkaAgent.sources.source1.channels = channel1
 KafkaAgent.sources.source1.kafka.consumer.timeout.ms = 100
@@ -760,17 +784,16 @@ KafkaAgent.channels.channel1.capacity = 10000
 KafkaAgent.channels.channel1.transactionCapacity = 1000
 
 KafkaAgent.sinks.sink1.type = hdfs
-KafkaAgent.sinks.sink1.hdfs.path = hdfs://namenode:9000/%{topic}/%y-%m-%d
+KafkaAgent.sinks.sink1.hdfs.path = hdfs://namenode:9000/%{topic}
 KafkaAgent.sinks.sink1.hdfs.rollInterval = 100
 KafkaAgent.sinks.sink1.hdfs.rollSize = 10000
 KafkaAgent.sinks.sink1.hdfs.rollCount = 0
 KafkaAgent.sinks.sink1.hdfs.fileType = DataStream
 KafkaAgent.sinks.sink1.channel = channel1
 
-KafkaAgent.sinks.sink1.hdfs.filePrefix = covid19
+KafkaAgent.sinks.sink1.hdfs.filePrefix = covid_19
 KafkaAgent.sinks.sink1.hdfs.fileSuffix = .avro
 KafkaAgent.sinks.sink1.serializer = avro_event
-KafkaAgent.sinks.sink1.serializer.compressionCodec = snappy
 --
 
 ==== Avro schema
@@ -827,3 +850,160 @@ image::img/flafka.png[Kafka Producer]
 
 .Εμφάνιση Avro αρχείου στο HDFS
 image::img/hdfs.png[Avro αρχείο στο hdfs]
+
+=== Μέρος δεύτερο: ανάλυσης δεδομένων
+
+Από τα δεδομένα που συλλέχθηκαν, μπορούν να αναλύθουν οι εξής πληροφορίες:
+
+. Τα επίπεδα φίλτρων που έχει βάλει ο χρήστης
+. Τα ποσοστά των χρήστων που είναι verified
+. Οι γλώσσες που γράφτηκαν τα tweets
+. Οι τοποθεσίες που γράφτηκαν τα tweets
+
+==== Ανάλυση επιπέδων φιλτρών
+
+Ο Mapper είναι αρκετά παρομοίως με τον Mapper που μελετήθηκε στο αρχικό παραδειγμά. Η διαφορά τους είναι ότι δέχεται σαν όρισμα ένα Avro αρχείο. Αυτό στον Runner πρέπει να δηλώθει αντί για ``conf.setInputFormat(TextInputFormat.class);``, να δηλωθεί ``conf.setInputFormat(AvroInputFormat.class)``.
+
+[source]
+--
+public class FilterMapper extends MapReduceBase implements
+        Mapper<AvroWrapper<GenericRecord>, NullWritable, Text, IntWritable> {
+    @Override
+    public void map(
+            AvroWrapper<GenericRecord> genericRecordAvroWrapper, // Avro input αρχείο
+            NullWritable nullWritable, // Αυτό αδείο επείδη δεν χρείαζεται πλέον
+            OutputCollector<Text, IntWritable> outputCollector,
+            Reporter reporter
+    ) throws IOException {
+        outputCollector.collect(
+                new Text(genericRecordAvroWrapper.datum().get("filter").toString()), // Παίρνει τα δεδομένα του filter και τα κάνει parse ως String
+                new IntWritable(1)
+        );
+    }
+}
+--
+
+Ο Reducer παραμένει ίδιος με το παράδειγμα. +
+Αυτό θα μας δημιουργήσει ένα καίνουργιο αρχείο, το οποίο βρίσκεται μέσα στον κατάλογο ``FilterResults``.
+
+.Τα αποτελέσματα από την ανάλυση των φίλτρων
+image::img/FilterResults.png[Μία μόνη εγγραφή]
+
+NOTE: Έτυχε στα συγκεκριμένα συλλεγόμενα tweets να επιστραφεί μόνο μία ρυθμίση στα filters.
+
+==== Ανάλυση γλωσσών
+
+Η ανάλυση γλωσσών γίνεται με ακριβώς τον ίδιο τρόπο, με την διαφορά ότι στον Mapper παίρνει το πεδίο του lang. +
+Αυτή την φορά τα νέα δεδομένα θα αποθηκευτούν μέσα στον φάκελο ``LangCountResults``.
+
+.Τα αποτελέσματα από την ανάλυση των γλωσσών
+image::img/lang_count.png[Αρκέτες γλώσσες με την πιο συχνή την αγγλική]
+
+==== Ανάλυση τοποθεσίας
+
+Παρόμοια με την ανάλυση γλωσσάς, ετσί και η ανάλυση τοποθεσίας βασιστήκε στην ανάλυση των φίλτρων. +
+Τα αποτελέσματα της ανάλυσης βρίσκεται στον φάκελο ``LocationResults``
+
+.Τα αποτελέσματα από την ανάλυση τοποθεσίας
+image::img/location_results.png[Αρκέτα πολλές εγράφες]
+
+NOTE: Μερικές από τις εγγράφες δεν είναι περιοχές και αρκετές δεν είχαν καν κάποια περιοχή.
+
+==== Ανάλυση verified
+
+Η ανάλυση για τον προσδιορίσμο εάν κάποιος χρήστης είναι verified ήταν από την μία πλευρά λίγο πιο περιπλόκη από τις υπολοίπες της συγκεκριμένης εργασίας.
+
+==== Mapper
+
+Στον mapper είχε δηλωθεί ένα ακέραιο attribute το οποίο ήταν public και static που είχε όνομα ``totalTweets``. Σκόπος του ήταν να διαβάζει πόσα tweets διαβάζει ο Mapper για να χρησιμοποίηθει στον Reducer.
+
+.Συνολικός κώδικας Mapper
+[source]
+--
+public class VerifiedMapper extends MapReduceBase implements
+        Mapper<AvroWrapper<GenericRecord>, NullWritable, Text, IntWritable> {
+    public static Integer totalTweets = 0;
+
+    @Override
+    public void map(
+            AvroWrapper<GenericRecord> genericRecordAvroWrapper,
+            NullWritable nullWritable,
+            OutputCollector<Text, IntWritable> outputCollector,
+            Reporter reporter
+    ) throws IOException {
+        var record = genericRecordAvroWrapper.datum();
+        totalTweets++;
+        outputCollector.collect(
+                new Text(record.get("verified").toString().equals("true") ? "Yes" : "No"),
+                new IntWritable(1)
+        );
+    }
+}
+--
+
+==== Reducer
+
+Ο Reducer είχε αρκέτες τροποποίησεις. Πρώτα διαβάζει τα δεδομένα, όπως και στο αρχικό παραδείγμα. Δηλαδή:
+
+[source]
+--
+var sum = 0.0;
+
+while (iterator.hasNext())
+    sum += iterator.next().get();
+--
+
+Τέλος, υπολογίζει τον μέσο όρο και το γράφει στο αρχείο. Αυτό γίνεται με τον εξής τρόπο:
+
+[source]
+--
+var average = (sum / VerifiedMapper.totalTweets) * 100;
+outputCollector.collect(text, new Text(String.valueOf(average).concat("%")));
+--
+
+.Συνολικός κώδικας Reducer
+[source]
+--
+public class VerifiedReducer extends MapReduceBase implements Reducer<Text, IntWritable, Text, Text> {
+    @Override
+    public void reduce(
+            Text text,
+            Iterator<IntWritable> iterator,
+            OutputCollector<Text, Text> outputCollector,
+            Reporter reporter
+    ) throws IOException {
+        var sum = 0.0;
+
+        while (iterator.hasNext())
+            sum += iterator.next().get();
+
+        var average = (sum / VerifiedMapper.totalTweets) * 100;
+        outputCollector.collect(text, new Text(String.valueOf(average).concat("%")));
+    }
+}
+--
+
+Αυτό αποθηκεύει στον φάκελο ``VerifiedResults``.
+
+.Τα αποτελέσματα από την ανάλυση των verified
+image::img/verified_results.png[Το 96% δεν είναι verified]
+
+== Συμπεράσματα
+
+Η επίλυση του προβλήματος με την χρήση του Hadoop ecosystem ήταν αρκέτα ενδιαφέρουσα. Στο παρελθόν, στο μάθημα του cloud computing είχε μελετηθεί ένα παρόμοιο πρόβλημα της https://github.com/IakMastro/Cloud-Eshop-Project-2021/blob/master/CloudComputingLabExercise.adoc[συλλογής πληροφορίων με την χρήση του Fluentd]. Στην πραγματικότητα βεβαία ήταν logs που άφηναν πίσω τα containers, ενώ σε αυτό ήταν δεδομένα που μπορούσαν να αναλυθούν μέχρι ένα συγκεκριμένο σημείο. Δυστύχως, από το twitter δεν μπορούν να συλλεχθούν ενδιαφέροντα δεδομένα. +
+Η ανάλυση των δεδομένων ήταν όλες παραλλαγές του WordCount. Στην πραγματικότητα, δεν αναλύθηκε κάτι πολύ σπουδαίο. Παρολά αυτά, έγινε πλήρης εμπέδωσης του MapReduce με Avro format. Γενικά πιο αναλυτικά παραδείγματα μελετήθηκαν επίσης στο cloud computing είτε https://github.com/IakMastro/CloudComputing/blob/main/Hadoop/Hadoop.adoc[σε Hadoop MapReduce] είτε https://github.com/IakMastro/CloudComputing/blob/main/Spark/Spark.adoc[σε Spark με DataFrames].
+
+== Βιβλιογραφία
+
+* Διαφάνειες μαθήματος Διαχείριση Δεδομένων Μεγάλης Κλίμακας, Α. Κιούρτης
+* Διαφάνειες μάθηματος Υπολογιστική Νέφους και Υπηρεσίες, Β. Μάμαλης
+* http://docs.swarmlab.io/SwarmLab-HowTos/courses/main.adoc.html
+* https://en.wikipedia.org/wiki/COVID-19
+* https://hadoop.apache.org/
+* https://spark.apache.org/
+* https://pandas.pydata.org/
+* https://numpy.org/
+* https://kafka.apache.org/
+* https://flume.apache.org/
+* https://mahout.apache.org/
+* https://docs.docker.com/
