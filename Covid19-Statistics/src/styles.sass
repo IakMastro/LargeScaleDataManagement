@@ -1,0 +1,81 @@
+body
+    box-sizing: border-box
+    margin: 0px
+    padding: 0px
+    font-size: 18px
+
+h1
+    margin-bottom: 0
+
+*
+    box-sizing: border-box
+    font-family: 'Noto Sans', sans-serif
+
+nav
+    border-bottom: 1px solid #ccc
+    background: #f1f1f1
+    display: flex
+    position: relative
+    .mobile-bar
+        display: none
+        flex-direction: column
+        justify-content: center
+        align-items: center
+        padding: 0.5em 1em
+        @media(max-width:480px)
+            display: flex
+        &.active
+            background: #333
+            span
+                background: white
+        span
+            display: block
+            height: 2px
+            width: 20px
+            margin: 2px
+            background: #ccc
+        &:hover
+            background: #e1e1e1
+            span
+                background: #aaa
+            &.active
+                background: darkcyan
+                span
+                    background: white
+    ul
+        list-style: none
+        margin: 0
+        padding: 0
+        transition: ease 1s all
+        @media(max-width:480px)
+            opacity: 0
+            max-height: 0px
+            overflow: hidden
+            visibility: none
+            display: flex
+            position: absolute
+            left: 0
+            right: -100%
+            top: 100%
+            flex-direction: column
+            background-color: #f1f1f1
+            margin-left: -100%
+            &.active
+                opacity: 1
+                right: 0%
+                margin-left: 0%
+                max-height: 500px
+                background-color: #e1e1e1
+                li
+                    width: 100%
+                a
+                    width: 100%
+        li
+            display: inline-block
+            a
+                display: inline-block
+                color: black
+                text-decoration: none
+                padding: 0.5em 1em
+                &:hover
+                    background: #776565

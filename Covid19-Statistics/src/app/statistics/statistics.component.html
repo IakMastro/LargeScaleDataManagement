@@ -1,0 +1,27 @@
+<h2>Filter levels</h2>
+<ul>
+    <li *ngFor="let filter of filters">
+        {{filter.filter_level}} appeared {{filter.count}} time(s)
+    </li>
+</ul>
+
+<h2>Verified?</h2>
+<ul>
+    <li *ngFor="let verifier of verified">
+        {{verifier.verified}}: {{verifier.percentage}}
+    </li>
+</ul>
+
+<h2>Languages</h2>
+<ul>
+    <li *ngFor="let language of languages">
+        {{language.lang}} appeared {{language.count}} time(s)
+    </li>
+</ul>
+
+<h2>Locations</h2>
+<ul>
+    <li *ngFor="let location of locations">
+        {{location.location}} appeared {{location.count}} time(s)
+    </li>
+</ul>

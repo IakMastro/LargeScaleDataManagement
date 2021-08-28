@@ -7,6 +7,7 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.mapred.FsInput;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -49,11 +50,13 @@ public class DataController {
         statistics = new Statistics(configuration);
     }
 
+    @CrossOrigin(origins = "*")
     @GetMapping("/data")
     public ArrayList<Tweet> getData() {
         return tweets;
     }
 
+    @CrossOrigin(origins = "*")
     @GetMapping("/")
     public Statistics getStatistics() {
         return statistics;

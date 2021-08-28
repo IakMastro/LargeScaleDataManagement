@@ -1,0 +1,19 @@
+<h1>{{title}}</h1>
+
+<nav>
+  <ul id="menu">
+    <li>
+      <a routerLink="/tweets">Tweets</a>
+    </li>
+
+    <li>
+      <a routerLink="/statistics">Statistics</a>
+    </li>
+  </ul>
+  <div class="mobile-bar" (click)="toggleMobileMenu()">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</nav>
+<router-outlet></router-outlet>

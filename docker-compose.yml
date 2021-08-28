@@ -108,8 +108,8 @@ services:
         container_name: java
         depends_on: 
             - namenode
-        env_file:
-            - ./hadoop.env
+        ports:
+            - 8080:8080
         volumes:
             - ./my_files:/my_files
         networks:

@@ -1,0 +1,20 @@
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Text</th>
+            <th>Lang</th>
+            <th>Location</th>
+            <th>Filter</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let tweet of tweets">
+            <td>{{tweet.name}}</td>
+            <td>{{tweet.text}}</td>
+            <td>{{tweet.lang}}</td>
+            <td>{{tweet.location}}</td>
+            <td>{{tweet.filter}}</td>
+        </tr>
+    </tbody>
+</table>
